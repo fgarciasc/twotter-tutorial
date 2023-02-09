@@ -9,15 +9,15 @@
           ({{ newTwootCharacterCount }}/180)
         </label>
         
-        <textarea v-model="newTwootText" id="newTwoot" rows="4"> </textarea>
+        <textarea v-model="state.newTwootText" id="newTwoot" rows="4"> </textarea>
         
         <div class="create-twoot-panel__submit">
             <div class="create-twoot-type">
               <label for="newTwootType"><strong>Tipo:</strong></label>
-              <select v-model="selectedTwootType" id="newTwootType">
+              <select v-model="state.selectedTwootType" id="newTwootType">
                 <option
                   :value="option.value"
-                  v-for="(option, index) in twootTypes"
+                  v-for="(option, index) in state.twootTypes"
                   :key="index"
                 >
                   {{ option.name }}
@@ -30,34 +30,39 @@
 </template>
 
 <script>
+
+import { reactive, computed } from 'vue';
+
 export default {
   name: "NewTwoot",
   
-  data() {
-    return {
-      twootTypes: [
+  setup(props, ctx){
+    const state = reactive({
+        twootTypes: [
         { value: "draft", name: "Rascunho" },
         { value: "instant", name: "Twoot já" },
       ],
       newTwootText: "",
-      selectedTwootType: "instant",
+      selectedTwootType: "instant",  
+    })
+
+    const newTwootCharacterCount = computed(() => state.newTwootText.length)
+
+    function createNewTwoot() {
+        if (state.selectedTwootType != "draft" && state.newTwootText) {
+        ctx.emit('add-twoot', state.newTwootText);
+        state.newTwootText = ''
+      }
+    }
+
+    return {
+        state,
+        newTwootCharacterCount,
+        createNewTwoot
     };
   },
 
-  computed:{
-    newTwootCharacterCount() {
-      return this.newTwootText.length;
-    },
-  },
-
-  methods: {
-    createNewTwoot() {
-      if (this.selectedTwootType != "draft" && this.newTwootText) {
-        this.$emit('add-twoot', this.newTwootText);
-        this.newTwootText = ''
-      }
-    },
-  },
+  
 };
 </script>
 

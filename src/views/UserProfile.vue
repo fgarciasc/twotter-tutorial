@@ -1,23 +1,23 @@
 <template>
   <div class="user-profile">
     <div class="user-profile_user-panel">
-      <h1 class="user-profile_user-name">@{{ user.username }}</h1>
-      <div class="user-profile_admin-badge" v-if="user.isAdmin">Admin</div>
+      <h1 class="user-profile_user-name">@{{ state.user.username }}</h1>
+      <div class="user-profile_admin-badge" v-if="state.user.isAdmin">Admin</div>
       <div class="user-profile_admin-badge" v-else>User</div>
       <div class="user-profile_follower-count">
-        <strong>Fooollowers: </strong> {{ followers }}
+        <strong>Fooollowers: </strong> {{ state.followers }}
       </div>
       
       <NewTwoot @add-twoot="createNewTwoot" >
-        
+
       </NewTwoot>
     </div>
     <div class="user-profile_twoots-wrapper">
       <TwootItem
-        v-for="twoot in user.twoots"
+        v-for="twoot in state.user.twoots"
         :key="twoot.id"
         :twoot="twoot"
-        :userName="user.username"
+        :userName="state.user.username"
         @favorite="toggleFavorite"
       >
       </TwootItem>
@@ -26,15 +26,24 @@
 </template>
 
 <script>
-import NewTwoot from './NewTwoot.vue';
-import TwootItem from "./TwootItem.vue";
+import { reactive, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { users } from '../assets/users.js';
+import NewTwoot from '../components/NewTwoot.vue';
+import TwootItem from '../components/TwootItem.vue';
 
 export default {
   name: "UserProfile",
   components: { TwootItem, NewTwoot },
-  data() {
-    return {
+  setup(){
+    const route = useRoute();
+    const userId = computed(()=>route.params.userId)
+
+    const state = reactive({
       followers: 0,
+      user: users[userId.value-1] || users[0],
+
+      /*
       user: {
         id: 1,
         username: "fgarcia",
@@ -50,40 +59,28 @@ export default {
           { id: 5, content: "nop" },
         ],
       },
+      */
       twootTypes: [
         { value: "draft", name: "Rascunho" },
         { value: "instant", name: "Twoot já" },
       ],
-    };
-  },
-  watch: {
-    followers(newFollowCount, oldFollowCount) {
-      if (oldFollowCount < newFollowCount) {
-        console.log(`${this.user.username} has gained a follower`);
-      }
-    },
-  },
-  computed: {
-    fullname() {
-      return `${this.user.firstName} ${this.user.lastName}`;
-    },
-  },
-  methods: {
-    followerUser() {
-      this.followers++;
-    },
-    toggleFavorite(id) {
+    })
+
+    function createNewTwoot(newTwootText) {
+      state.user.twoots.unshift({
+      id:state.user.twoots.length + 1,
+        content: newTwootText,
+      });
+    }
+
+    function toggleFavorite(id){
       console.log(id);
-    },
-    createNewTwoot(newTwootText) {
-        this.user.twoots.unshift({
-          id: this.user.twoots.length + 1,
-          content: newTwootText,
-        });
-    },
-  },
-  mounted() {
-    // this.followerUser();
+    }
+    return {
+      state,
+      createNewTwoot,
+      toggleFavorite
+    }
   },
 };
 </script>
